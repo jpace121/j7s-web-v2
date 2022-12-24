@@ -1,6 +1,14 @@
-import React, { useMemo, useState } from "react";
-import { RecoilRoot, useRecoilState, useRecoilValue, atom } from "recoil";
-import { Canvas, useThree } from "@react-three/fiber";
+import React from "react";
+import {
+  RecoilRoot,
+  useRecoilState,
+  useRecoilValue,
+  useSetRecoilState,
+  atom,
+  atomFamily,
+} from "recoil";
+import { Canvas } from "@react-three/fiber";
+import { Color } from "three";
 import {
   Navbar,
   //Button, // will conflict with react-three-fiber for some reason
@@ -10,94 +18,142 @@ import {
   Card,
   Form,
   FloatingLabel,
-  Modal,
 } from "react-bootstrap";
-import { OrbitControls } from "@react-three/drei";
+import { Edges } from "@react-three/drei";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 
-const xValue = atom({
-  key: "xValue",
-  default: 0.0,
+const colorAtomFamily = atomFamily({
+  key: "colorAtom",
+  default: "green",
 });
 
-const yValue = atom({
-  key: "yValue",
-  default: 0.0,
+const brightnessAtomFamily = atomFamily({
+  key: "brightnessAtom",
+  default: 1.0,
 });
 
-const resetCamera = atom({
-  key: "resetCamera",
+const selectedLightAtom = atom({
+  key: "selectedLightAtom",
+  default: -1,
+});
+
+const isControllingAtom = atom({
+  key: "isControllingAtom",
   default: false,
 });
+
+function LoginButton() {
+    const onClick = (e:any) => {
+    };
+    return (
+        <button type="button" className="btn btn-outline justify-content-end" onClick={onClick}>
+        Login
+        </button>
+    );
+}
 
 function AppNav() {
   return (
     <Navbar bg="light" variant="light" expand="sm" className="py-0">
       <Container>
-        <Navbar.Brand>Explore!</Navbar.Brand>
+        <Navbar.Brand>j7s</Navbar.Brand>
+        <LoginButton/>
       </Container>
     </Navbar>
   );
 }
 
-function MovementControls() {
-  const [xState, setXState] = useRecoilState(xValue);
-  const [yState, setYState] = useRecoilState(yValue);
-  const [resetCameraState, setResetCameraState] = useRecoilState(resetCamera);
+function ColorSelector(props: any) {
+  const [color, setColor] = useRecoilState(
+    colorAtomFamily(props.selectedLight)
+  );
 
-  let onXChange = (e: any) => {
-    setXState(e.target.value);
+  let onChange = (e: any) => {
+    setColor(e.target.value);
   };
-  let onYChange = (e: any) => {
-    setYState(e.target.value);
+
+  return (
+    <Form.Select onChange={onChange} value={color} disabled={props.disabled}>
+      <option value="green">Green</option>
+      <option value="blue">Blue</option>
+      <option value="white">White</option>
+      <option value="red">Red</option>
+      <option value="lime">Lime</option>
+      <option value="aqua">Aqua</option>
+      <option value="off">Off</option>
+    </Form.Select>
+  );
+}
+
+function BrightnessRange(props: any) {
+  const [brightness, setBrightness] = useRecoilState(
+    brightnessAtomFamily(props.selectedLight)
+  );
+  let onChange = (e: any) => {
+    setBrightness(e.target.value);
   };
-  let onButtonClick = () => {
-    setResetCameraState(!resetCameraState);
-  };
+  return (
+    <FloatingLabel label="Brightness">
+      <Form.Control
+        size="sm"
+        type="number"
+        value={brightness}
+        onChange={onChange}
+        disabled={props.disabled}
+        min={0.0}
+        step={0.1}
+        max={1.0}
+      />
+    </FloatingLabel>
+  );
+}
+
+function ColorControls() {
+  const selectedLight = useRecoilValue(selectedLightAtom);
+  const isControlling = useRecoilValue(isControllingAtom);
+
+  const disabled = selectedLight <= 0 || !isControlling;
+  let selectedLightText = selectedLight.toString();
+  if (selectedLight < 0) {
+    selectedLightText = "N/A";
+  }
 
   return (
     <Card className="padded-card">
       <Form>
         <Row>
           <Col>
-            <Form.Label>Red Square Position:</Form.Label>
+            <Form.Label>Selected Light: {selectedLightText}</Form.Label>
           </Col>
         </Row>
         <Row>
           <Col>
-            <FloatingLabel label="x(m)">
-              <Form.Control
-                size="sm"
-                type="number"
-                value={xState}
-                onChange={onXChange}
+            <FloatingLabel label="Color">
+              <ColorSelector
+                selectedLight={selectedLight}
+                disabled={disabled}
               />
             </FloatingLabel>
           </Col>
         </Row>
         <Row>
           <Col>
-            <FloatingLabel label="y(m)">
-              <Form.Control
-                size="sm"
-                type="number"
-                value={yState}
-                onChange={onYChange}
-              />
-            </FloatingLabel>
+            <BrightnessRange
+              selectedLight={selectedLight}
+              disabled={disabled}
+            />
           </Col>
         </Row>
         <Row>
           <Col>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={onButtonClick}
-            >
-              Reset Camera Position
-            </button>
+            <ControlSelector />
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <Send />
           </Col>
         </Row>
       </Form>
@@ -105,48 +161,71 @@ function MovementControls() {
   );
 }
 
-function CameraResetNode() {
-  // eslint-disable-next-line
-  let resetState = useRecoilValue(resetCamera);
-  const camera = useThree((state) => state.camera);
-  useMemo(() => {
-    camera.position.x = 0;
-    camera.position.y = 0;
-    camera.position.z = 5;
-    camera.lookAt(0, 0, 0);
-    // eslint-disable-next-line
-  }, [resetState, camera]);
-  return <></>;
-}
-
-function ControlledBox() {
-  let xValueState = useRecoilValue(xValue);
-  let yValueState = useRecoilValue(yValue);
-
+function ControlSelector(props: any) {
+  const [controlling, setControlling] = useRecoilState(isControllingAtom);
+  const onClick = (e: any) => {
+    setControlling(!controlling);
+  };
+  let text = "Take Control";
+  if (controlling) {
+    text = "Give Control";
+  }
   return (
-    <mesh position={[xValueState, yValueState, 0.25]} rotation={[0, 0, 0]}>
-      <boxGeometry args={[0.5, 0.5, 0.5]} />
-      <meshStandardMaterial color="red" />
-    </mesh>
+    <button type="button" className="btn btn-outline-primary" onClick={onClick}>
+      {text}
+    </button>
   );
 }
 
-function UncontrolledBox() {
-  let [colorBool, setColorBool] = useState(true);
-  const click = (e: any) => {
-    setColorBool(!colorBool);
-  };
+function Send(props: any) {
+  const controlling = useRecoilValue(isControllingAtom);
+  const disabled = !controlling;
   return (
-    <mesh rotation={[0, 0, 0]} position={[0, 0, 0.25]} onClick={click}>
+    <button type="button" className="btn btn-success" disabled={disabled}>
+      Send
+    </button>
+  );
+}
+
+function j7sColorToThree(j7sColor: String): THREE.Color {
+  if (j7sColor === "off") {
+    return new Color("black");
+  }
+  return new Color(j7sColor as any);
+}
+
+function IndicatorBox(props: any) {
+  const [selectedLight, setSelectedLight] = useRecoilState(selectedLightAtom);
+  const boxColor = j7sColorToThree(
+    useRecoilValue(colorAtomFamily(props.boxNum))
+  );
+
+  const click = (e: any) => {
+    if (selectedLight === props.boxNum) {
+      setSelectedLight(-1);
+    } else {
+      setSelectedLight(props.boxNum);
+    }
+    e.stopPropagation();
+  };
+  let isSelected = props.boxNum === selectedLight;
+  return (
+    <mesh rotation={[0, 0, 0]} position={[props.xPos, 0, 0.25]} onClick={click}>
       <boxGeometry args={[0.5, 0.5, 0.5]} />
-      <meshStandardMaterial color={colorBool ? "green" : "blue"} />
+      <meshStandardMaterial color={boxColor} />
+      <Edges color={"white"} visible={isSelected} />
     </mesh>
   );
 }
 
 function GroundPlane() {
+  const setSelectedLight = useSetRecoilState(selectedLightAtom);
+  let click = (e: any) => {
+    setSelectedLight(-1);
+    e.stopPropagation();
+  };
   return (
-    <mesh position={[0, 0, 0]} rotation={[0, 0, 0]}>
+    <mesh position={[0, 0, 0]} rotation={[0, 0, 0]} onClick={click}>
       <planeGeometry args={[20, 20]} />
       <meshStandardMaterial color="silver" transparent={true} opacity={0.3} />
     </mesh>
@@ -154,23 +233,21 @@ function GroundPlane() {
 }
 
 function AppCanvas() {
-  let click = (e: any) => {
-    console.log("Click");
-  };
   return (
     <div style={{ width: "50vw", height: "50vh" }}>
       <Canvas orthographic camera={{ zoom: 50, position: [0, 0, 5] }}>
         <color attach="background" args={["black"]} />
-        <OrbitControls />
-        <CameraResetNode />
 
         <GroundPlane />
 
         <ambientLight intensity={0.1} />
         <directionalLight position={[0, 0, 5]} intensity={0.5} />
 
-        <ControlledBox />
-        <UncontrolledBox />
+        <IndicatorBox xPos={-2.0} boxNum={1} />
+        <IndicatorBox xPos={-1.0} boxNum={2} />
+        <IndicatorBox xPos={0.0} boxNum={3} />
+        <IndicatorBox xPos={1.0} boxNum={4} />
+        <IndicatorBox xPos={2.0} boxNum={5} />
       </Canvas>
     </div>
   );
@@ -187,7 +264,7 @@ function App() {
               <AppCanvas />
             </Col>
             <Col>
-              <MovementControls />
+              <ColorControls />
             </Col>
           </Row>
         </Container>
