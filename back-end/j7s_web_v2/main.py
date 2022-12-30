@@ -1,5 +1,6 @@
 from aiohttp import web
 import aiohttp
+import asyncio
 import pydantic
 from j7s_web_v2.types import LightState
 import j7s_web_v2.global_state as global_state
@@ -37,9 +38,38 @@ async def get_lights(request):
     return web.Response(status=200, text=light_state.json(),
                         content_type='application/json')
 
-def main():
+@routes.get("/lights/ws")
+async def lights_ws(request):
+    ws = web.WebSocketResponse()
+    await ws.prepare(request)
+
+    async for msg in ws:
+        pass
+
+async def printer():
+    while True:
+        print("Test")
+        await asyncio.sleep(1)
+
+async def webrunner():
     global routes
 
     app = web.Application()
     app.add_routes(routes)
-    web.run_app(app)
+    runner = web.AppRunner(app)
+    await runner.setup()
+
+    site = web.TCPSite(runner, 'localhost', 8080)
+    await site.start()
+
+    while True:
+        await asyncio.sleep(3600)
+
+async def loop():
+    await asyncio.gather(webrunner(),
+                         printer())
+
+def main():
+    asyncio.run(loop())
+
+
