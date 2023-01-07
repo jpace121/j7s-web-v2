@@ -13,3 +13,4 @@ front-end/yarn-debug.log*
 front-end/yarn-error.log*
 # Backend
 venv/
+back-end/j7s_web_v2/__pycache__/
