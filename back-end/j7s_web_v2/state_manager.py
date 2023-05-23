@@ -28,7 +28,7 @@ class StateManager():
         return self._light_states[index]
 
     def get_global_state(self):
-        return LightStateList(**self._light_states)
+        return LightStateList(self._light_states)
 
     def add_sub(self, name, ws):
         print('Add sub')

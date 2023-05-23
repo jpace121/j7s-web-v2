@@ -177,11 +177,55 @@ function ControlSelector(props: any) {
   );
 }
 
+async function send(colors: any[], brightness: any[]) {
+    if(colors.length !== brightness.length) {
+        console.log("Can't send because color and brightness aren't the same size. ");
+        return;
+    }
+    const length = colors.length;
+    for(let inc = 0; inc < length; inc++) {
+        const lightState = {
+            "color": colors[inc],
+            "brightness": brightness[inc]
+        };
+        const url = `/api/lights/${inc}`;
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: new Headers(),
+                body: JSON.stringify(lightState)
+            });
+        } catch(error) {
+            console.log(error);
+        }
+    }
+}
+
 function Send(props: any) {
   const controlling = useRecoilValue(isControllingAtom);
   const disabled = !controlling;
+  const curColors = [
+      useRecoilValue(colorAtomFamily(1)),
+      useRecoilValue(colorAtomFamily(2)),
+      useRecoilValue(colorAtomFamily(3)),
+      useRecoilValue(colorAtomFamily(4)),
+      useRecoilValue(colorAtomFamily(5))
+  ];
+  const curBrightnesses = [
+      useRecoilValue(brightnessAtomFamily(1)),
+      useRecoilValue(brightnessAtomFamily(2)),
+      useRecoilValue(brightnessAtomFamily(3)),
+      useRecoilValue(brightnessAtomFamily(4)),
+      useRecoilValue(brightnessAtomFamily(5))
+  ];
+  const click = async (e: any) => {
+      if(controlling) {
+          await send(curColors, curBrightnesses);
+      }
+      e.stopPropagation();
+  };
   return (
-    <button type="button" className="btn btn-success" disabled={disabled}>
+    <button type="button" className="btn btn-success" disabled={disabled} onClick={click}>
       Send
     </button>
   );

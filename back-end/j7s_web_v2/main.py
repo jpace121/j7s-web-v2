@@ -9,11 +9,11 @@ import j7s_web_v2.state_manager as state_manager
 routes = web.RouteTableDef()
 state_manager = state_manager.StateManager()
 
-@routes.get('/')
+@routes.get('/api/')
 async def index(request):
     return web.Response(text="j7s-web-v2 backend")
 
-@routes.post("/lights/{index:\d+}")
+@routes.post("/api/lights/{index:\d+}")
 async def post_lights(request):
     print('Post')
     light_index = int(request.match_info['index'])
@@ -30,7 +30,7 @@ async def post_lights(request):
     state_manager.update_state(light_index, light_state)
     return web.Response(text='Ok')
 
-@routes.get("/lights/{index:\d+}")
+@routes.get("/api/lights/{index:\d+}")
 async def get_lights(request):
     light_index = int(request.match_info['index'])
     if light_index >= state_manager.get_num_lights():
@@ -43,7 +43,7 @@ async def get_lights(request):
     return web.Response(status=200, text=light_state.json(),
                         content_type='application/json')
 
-@routes.get("/lights/ws")
+@routes.get("/api/lights/ws")
 async def lights_ws(request):
     ws = web.WebSocketResponse()
     await ws.prepare(request)
