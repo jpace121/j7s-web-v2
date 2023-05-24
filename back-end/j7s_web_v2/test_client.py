@@ -3,9 +3,9 @@ import asyncio
 
 async def run():
     async with aiohttp.ClientSession() as session:
-        async with session.ws_connect('http://localhost:9000/api/lights/ws') as ws:
+        async with session.ws_connect('http://localhost:8080/api/lights/ws') as ws:
             while True:
-                print('In with')
+                #print('In with')
                 async for msg in ws:
                     print('New message.')
                     if msg.type == aiohttp.WSMsgType.TEXT:
@@ -21,11 +21,11 @@ async def send():
     data = b'{"color": "red", "brightness": 0.8}'
     while True:
         async with aiohttp.ClientSession() as session:
-            resp = await session.post('http://localhost:9000/api/lights/1', data=data)
+            resp = await session.post('http://localhost:8080/api/lights/1', data=data)
         await asyncio.sleep(0.1)
 
 async def gather():
-    await asyncio.gather(send())
+    await asyncio.gather(send(), run())
 
 def main():
     asyncio.run(gather())

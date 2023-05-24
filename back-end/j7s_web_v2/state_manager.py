@@ -1,11 +1,12 @@
-from j7s_web_v2.json_types import LightState, LightStateList
+from j7s_api.LightState_pb2 import LightState, LightStateList
+from google.protobuf.json_format import MessageToJson
 import json
 import asyncio
 
 
 class StateManager():
     def __init__(self):
-        default_state = LightState(color='off', brightness='1.0')
+        default_state = LightState(color='off', brightness=1.0)
         self._light_states = [default_state, default_state, default_state,
                               default_state, default_state, default_state]
         # TODO: Can this be a set?
@@ -28,7 +29,10 @@ class StateManager():
         return self._light_states[index]
 
     def get_global_state(self):
-        return LightStateList(self._light_states)
+        light_state_list = LightStateList()
+        for state in self._light_states:
+            light_state_list.data.add(brightness=state.brightness, color=state.color)
+        return light_state_list
 
     def add_sub(self, name, ws):
         print('Add sub')
@@ -44,6 +48,6 @@ class StateManager():
 
     async def _update_subs_coroutine(self):
         message = self.get_global_state()
-        for ws in self._subs.items():
+        for (name, ws) in self._subs.items():
             print('Sending')
-            await ws.send_str(message)
+            await ws.send_str(MessageToJson(message))

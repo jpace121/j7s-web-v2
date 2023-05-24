@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+message LightState {
+  optional string color = 1;
+  optional double brightness = 2;
+}
+
+message LightStateList {
+  repeated LightState data = 1;
+}

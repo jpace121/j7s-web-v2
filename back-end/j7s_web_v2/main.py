@@ -3,7 +3,8 @@ import uuid
 import aiohttp
 import asyncio
 import pydantic
-from j7s_web_v2.json_types import LightState
+from j7s_api.LightState_pb2 import LightState
+from google.protobuf.json_format import Parse, MessageToJson
 import j7s_web_v2.state_manager as state_manager
 
 routes = web.RouteTableDef()
@@ -23,7 +24,7 @@ async def post_lights(request):
     try:
         data = await request.json()
         print(data)
-        light_state = await request.json(loads=LightState.parse_raw)
+        light_state = await request.json(loads = lambda x: Parse(x, LightState))
     except pydantic.ValidationError:
         return web.Response(status=400, text='Bad request.')
     print('Updating state.')
@@ -40,7 +41,7 @@ async def get_lights(request):
         light_state = state_manager.get_state(light_index)
     except Exception:
         return web.Response(status=500, text='Could not get state')
-    return web.Response(status=200, text=light_state.json(),
+    return web.Response(status=200, text=MessageToJson(light_state),
                         content_type='application/json')
 
 @routes.get("/api/lights/ws")
