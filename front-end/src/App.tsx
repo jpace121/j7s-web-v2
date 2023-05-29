@@ -1,4 +1,4 @@
-import React from "react";
+import React, { createContext, useEffect, useRef } from "react";
 import {
   RecoilRoot,
   useRecoilState,
@@ -44,14 +44,51 @@ const isControllingAtom = atom({
   default: false,
 });
 
-function LoginButton() {
-    const onClick = (e:any) => {
+const SocketContext = createContext(null);
+function SocketWrapper(props: any) {
+  let socket: any = useRef(null);
+
+  useEffect(() => {
+    socket.current = new WebSocket("ws://localhost:9000/api/lights/ws");
+
+    // Connection opened
+    socket.current.addEventListener("open", (event: any) => {
+      console.log("Connected to ws.");
+    });
+    // Connection closed.
+    socket.current.addEventListener("close", (event: any) => {
+      console.log("Disconnected from ws.");
+    });
+
+    // Messages!
+    socket.current.addEventListener("message", (event: any) => {
+      console.log("Message from server ", event.data);
+    });
+
+    // On destruction disconnect.
+    return () => {
+      socket.current.close();
     };
-    return (
-        <button type="button" className="btn btn-outline justify-content-end" onClick={onClick}>
-        Login
-        </button>
-    );
+  }, []);
+
+  return (
+    <SocketContext.Provider value={null}>
+      {props.children}
+    </SocketContext.Provider>
+  );
+}
+
+function LoginButton() {
+  const onClick = (e: any) => {};
+  return (
+    <button
+      type="button"
+      className="btn btn-outline justify-content-end"
+      onClick={onClick}
+    >
+      Login
+    </button>
+  );
 }
 
 function AppNav() {
@@ -59,7 +96,7 @@ function AppNav() {
     <Navbar bg="light" variant="light" expand="sm" className="py-0">
       <Container>
         <Navbar.Brand>j7s</Navbar.Brand>
-        <LoginButton/>
+        <LoginButton />
       </Container>
     </Navbar>
   );
@@ -177,55 +214,62 @@ function ControlSelector(props: any) {
   );
 }
 
-async function send(colors: any[], brightness: any[]) {
-    if(colors.length !== brightness.length) {
-        console.log("Can't send because color and brightness aren't the same size. ");
-        return;
+async function make_request(colors: any[], brightness: any[]) {
+  if (colors.length !== brightness.length) {
+    console.log(
+      "Can't send because color and brightness aren't the same size. "
+    );
+    return;
+  }
+  const length = colors.length;
+  for (let inc = 0; inc < length; inc++) {
+    const lightState = {
+      color: colors[inc],
+      brightness: brightness[inc],
+    };
+    const url = `/api/lights/${inc}`;
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: new Headers(),
+        body: JSON.stringify(lightState),
+      });
+    } catch (error) {
+      console.log(error);
     }
-    const length = colors.length;
-    for(let inc = 0; inc < length; inc++) {
-        const lightState = {
-            "color": colors[inc],
-            "brightness": brightness[inc]
-        };
-        const url = `/api/lights/${inc}`;
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: new Headers(),
-                body: JSON.stringify(lightState)
-            });
-        } catch(error) {
-            console.log(error);
-        }
-    }
+  }
 }
 
 function Send(props: any) {
   const controlling = useRecoilValue(isControllingAtom);
   const disabled = !controlling;
   const curColors = [
-      useRecoilValue(colorAtomFamily(1)),
-      useRecoilValue(colorAtomFamily(2)),
-      useRecoilValue(colorAtomFamily(3)),
-      useRecoilValue(colorAtomFamily(4)),
-      useRecoilValue(colorAtomFamily(5))
+    useRecoilValue(colorAtomFamily(1)),
+    useRecoilValue(colorAtomFamily(2)),
+    useRecoilValue(colorAtomFamily(3)),
+    useRecoilValue(colorAtomFamily(4)),
+    useRecoilValue(colorAtomFamily(5)),
   ];
   const curBrightnesses = [
-      useRecoilValue(brightnessAtomFamily(1)),
-      useRecoilValue(brightnessAtomFamily(2)),
-      useRecoilValue(brightnessAtomFamily(3)),
-      useRecoilValue(brightnessAtomFamily(4)),
-      useRecoilValue(brightnessAtomFamily(5))
+    useRecoilValue(brightnessAtomFamily(1)),
+    useRecoilValue(brightnessAtomFamily(2)),
+    useRecoilValue(brightnessAtomFamily(3)),
+    useRecoilValue(brightnessAtomFamily(4)),
+    useRecoilValue(brightnessAtomFamily(5)),
   ];
   const click = async (e: any) => {
-      if(controlling) {
-          await send(curColors, curBrightnesses);
-      }
-      e.stopPropagation();
+    if (controlling) {
+      await make_request(curColors, curBrightnesses);
+    }
+    e.stopPropagation();
   };
   return (
-    <button type="button" className="btn btn-success" disabled={disabled} onClick={click}>
+    <button
+      type="button"
+      className="btn btn-success"
+      disabled={disabled}
+      onClick={click}
+    >
       Send
     </button>
   );
@@ -300,19 +344,21 @@ function AppCanvas() {
 function App() {
   return (
     <RecoilRoot>
-      <div>
-        <AppNav />
-        <Container className="py-5">
-          <Row>
-            <Col>
-              <AppCanvas />
-            </Col>
-            <Col>
-              <ColorControls />
-            </Col>
-          </Row>
-        </Container>
-      </div>
+      <SocketWrapper>
+        <div>
+          <AppNav />
+          <Container className="py-5">
+            <Row>
+              <Col>
+                <AppCanvas />
+              </Col>
+              <Col>
+                <ColorControls />
+              </Col>
+            </Row>
+          </Container>
+        </div>
+      </SocketWrapper>
     </RecoilRoot>
   );
 }
