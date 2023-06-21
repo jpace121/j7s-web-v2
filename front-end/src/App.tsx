@@ -47,8 +47,40 @@ const isControllingAtom = atom({
 const SocketContext = createContext(null);
 function SocketWrapper(props: any) {
   let socket: any = useRef(null);
+  const setBrightness = [
+    useSetRecoilState(brightnessAtomFamily(1)),
+    useSetRecoilState(brightnessAtomFamily(2)),
+    useSetRecoilState(brightnessAtomFamily(3)),
+    useSetRecoilState(brightnessAtomFamily(4)),
+    useSetRecoilState(brightnessAtomFamily(5)),
+    useSetRecoilState(brightnessAtomFamily(5)),
+  ];
+  const setColor = [
+    useSetRecoilState(colorAtomFamily(1)),
+    useSetRecoilState(colorAtomFamily(2)),
+    useSetRecoilState(colorAtomFamily(3)),
+    useSetRecoilState(colorAtomFamily(5)),
+    useSetRecoilState(colorAtomFamily(5)),
+    useSetRecoilState(colorAtomFamily(6)),
+  ];
+  const isControlling = useRecoilValue(isControllingAtom);
 
+  // TODO: This reruns every render because recoil..
   useEffect(() => {
+    const onMessage = (data: any, is_controlling: boolean) => {
+      data = JSON.parse(data)["data"];
+      console.log(data);
+      if (is_controlling) {
+        return;
+      }
+
+      for (let inc = 0; inc < 6; inc++) {
+        const input: any = data[inc];
+        setBrightness[inc](input.brightness);
+        setColor[inc](input.color);
+      }
+    };
+
     socket.current = new WebSocket("ws://localhost:9000/api/lights/ws");
 
     // Connection opened
@@ -62,14 +94,14 @@ function SocketWrapper(props: any) {
 
     // Messages!
     socket.current.addEventListener("message", (event: any) => {
-      console.log("Message from server ", event.data);
+      onMessage(event.data, isControlling);
     });
 
     // On destruction disconnect.
     return () => {
       socket.current.close();
     };
-  }, []);
+  });
 
   return (
     <SocketContext.Provider value={null}>
