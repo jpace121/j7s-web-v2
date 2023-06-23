@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10LightState.proto\"R\n\nLightState\x12\x12\n\x05\x63olor\x18\x01 \x01(\tH\x00\x88\x01\x01\x12\x17\n\nbrightness\x18\x02 \x01(\x01H\x01\x88\x01\x01\x42\x08\n\x06_colorB\r\n\x0b_brightness\"+\n\x0eLightStateList\x12\x19\n\x04\x64\x61ta\x18\x01 \x03(\x0b\x32\x0b.LightStateb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10LightState.proto\"R\n\nLightState\x12\x12\n\x05\x63olor\x18\x01 \x01(\tH\x00\x88\x01\x01\x12\x17\n\nbrightness\x18\x02 \x01(\x01H\x01\x88\x01\x01\x42\x08\n\x06_colorB\r\n\x0b_brightness\"+\n\x0eLightStateList\x12\x19\n\x04\x64\x61ta\x18\x01 \x03(\x0b\x32\x0b.LightState\"V\n\rChangeRequest\x12\x10\n\x03uid\x18\x01 \x01(\tH\x00\x88\x01\x01\x12\"\n\x04\x64\x61ta\x18\x02 \x01(\x0b\x32\x0f.LightStateListH\x01\x88\x01\x01\x42\x06\n\x04_uidB\x07\n\x05_data\"V\n\rConnectionAck\x12\x10\n\x03uid\x18\x01 \x01(\tH\x00\x88\x01\x01\x12\"\n\x04\x64\x61ta\x18\x02 \x01(\x0b\x32\x0f.LightStateListH\x01\x88\x01\x01\x42\x06\n\x04_uidB\x07\n\x05_datab\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -25,4 +25,8 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _globals['_LIGHTSTATE']._serialized_end=102
   _globals['_LIGHTSTATELIST']._serialized_start=104
   _globals['_LIGHTSTATELIST']._serialized_end=147
+  _globals['_CHANGEREQUEST']._serialized_start=149
+  _globals['_CHANGEREQUEST']._serialized_end=235
+  _globals['_CONNECTIONACK']._serialized_start=237
+  _globals['_CONNECTIONACK']._serialized_end=323
 # @@protoc_insertion_point(module_scope)

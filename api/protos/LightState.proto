@@ -8,3 +8,13 @@ message LightState {
 message LightStateList {
   repeated LightState data = 1;
 }
+
+message ChangeRequest {
+   optional string uid = 1;
+   optional LightStateList data = 2;
+}
+
+message ConnectionAck {
+   optional string uid = 1;
+   optional LightStateList data = 2;
+}

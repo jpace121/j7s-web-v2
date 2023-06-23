@@ -2,9 +2,8 @@ from aiohttp import web
 import uuid
 import aiohttp
 import asyncio
-import pydantic
-from j7s_api.LightState_pb2 import LightState
-from google.protobuf.json_format import Parse, MessageToJson
+from j7s_api.LightState_pb2 import ChangeRequest, ConnectionAck
+from google.protobuf.json_format import Parse, ParseError, MessageToJson
 import j7s_web_v2.state_manager as state_manager
 
 routes = web.RouteTableDef()
@@ -14,33 +13,24 @@ state_manager = state_manager.StateManager()
 async def index(request):
     return web.Response(text="j7s-web-v2 backend")
 
-@routes.post("/api/lights/{index:\d+}")
+@routes.post("/api/lights")
 async def post_lights(request):
     print('Post')
-    light_index = int(request.match_info['index'])
-    if light_index >= state_manager.get_num_lights():
-        return web.Response(status=400, text='Light index too big.')
-    light_state = None
+    change_request = None
     try:
-        data = await request.json()
-        print(data)
-        light_state = await request.json(loads = lambda x: Parse(x, LightState))
-    except pydantic.ValidationError:
+        data = await request.text()
+        print("Got request: {}".format(data))
+        change_request = Parse(data, ChangeRequest())
+    except (ParseError) as error:
+        print(str(error))
         return web.Response(status=400, text='Bad request.')
     print('Updating state.')
-    state_manager.update_state(light_index, light_state)
+    state_manager.update_state(change_request.data, change_request.uid)
     return web.Response(text='Ok')
 
-@routes.get("/api/lights/{index:\d+}")
+@routes.get("/api/lights")
 async def get_lights(request):
-    light_index = int(request.match_info['index'])
-    if light_index >= state_manager.get_num_lights():
-        return web.Response(status=400, text='Light index too big.')
-    light_state = None
-    try:
-        light_state = state_manager.get_state(light_index)
-    except Exception:
-        return web.Response(status=500, text='Could not get state')
+    light_state = state_manager.get_state()
     return web.Response(status=200, text=MessageToJson(light_state),
                         content_type='application/json')
 
@@ -49,9 +39,14 @@ async def lights_ws(request):
     ws = web.WebSocketResponse()
     await ws.prepare(request)
 
-    name = uuid.uuid4()
+    name = str(uuid.uuid4())
     state_manager.add_sub(name, ws)
 
+    # Send to ws it's name and the current state.
+    ack = ConnectionAck(uid=name, data=state_manager.get_state())
+    await ws.send_str(MessageToJson(ack))
+
+    # Wait for msg from ws...
     async for msg in ws:
         if msg.type == aiohttp.WSMsgType.CLOSE:
             await ws.close()
