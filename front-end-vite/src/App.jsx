@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { create } from "zustand";
+import { useStore } from "./Store.js";
+import { SocketWrapper } from "./SocketContext.tsx";
 import {
   Navbar,
   Container,
@@ -12,42 +13,6 @@ import {
 } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
-
-const useStore = create((set, get) => ({
-  toDisplayColors: ["green", "green", "green", "green", "green"],
-  toDisplayBrightness: [0.0, 0.0, 0.0, 0.0, 0.0],
-  toSendColors: ["green", "green", "green", "green", "green"],
-  toSendBrightness: [0.0, 0.0, 0.0, 0.0, 0.0],
-
-  setToDisplayColor: (index, color) => {
-    const colorCopy = get().toDisplayColors.slice();
-    colorCopy[index] = color;
-    set((state) => ({
-      toDisplayColors: colorCopy,
-    }));
-  },
-  setToDisplayBrightness: (index, brightness) => {
-    const brightnessCopy = get().toDisplayBrightness.slice();
-    brightnessCopy[index] = brightness;
-    set((state) => ({
-      toDisplayBrightness: brightnessCopy,
-    }));
-  },
-  setToSendColor: (index, color) => {
-    const colorCopy = get().toSendColors.slice();
-    colorCopy[index] = color;
-    set((state) => ({
-      toSendColors: colorCopy,
-    }));
-  },
-  setToSendBrightness: (index, brightness) => {
-    const brightnessCopy = get().toSendBrightness.slice();
-    brightnessCopy[index] = brightness;
-    set((state) => ({
-      toSendBrightness: brightnessCopy,
-    }));
-  },
-}));
 
 function AppNav() {
   return (
@@ -136,8 +101,7 @@ function LightSelect(props) {
 
 function InputForm() {
   const [selectedLight, setSelectedLight] = useState(0);
-    const onSubmit = (e) => {
-    };
+  const onSubmit = (e) => {};
   return (
     <Card className="padded-card">
       <LightSelect
@@ -146,7 +110,10 @@ function InputForm() {
       />
       <ColorSelect selectedLight={selectedLight} />
       <BrightnessSelect selectedLight={selectedLight} />
-      <Button variant="primary" onClick={onSubmit}> Send</Button>
+      <Button variant="primary" onClick={onSubmit}>
+        {" "}
+        Send
+      </Button>
     </Card>
   );
 }
@@ -155,10 +122,12 @@ function App() {
   return (
     <div>
       <AppNav />
-      <Container>
-        <Display />
-        <InputForm />
-      </Container>
+      <SocketWrapper>
+        <Container>
+          <Display />
+          <InputForm />
+        </Container>
+      </SocketWrapper>
     </div>
   );
 }
