@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useStore } from "./Store.js";
+import { AppCanvas } from "./SceneView.jsx";
 import { sendDesiredState } from "./Api.js";
 import { SocketWrapper } from "./SocketContext.jsx";
 import {
@@ -25,13 +26,13 @@ function AppNav() {
   );
 }
 
-function Display() {
+function DebugDisplay() {
   const displayColors = useStore((state) => state.toDisplayColors);
   const displayBrightness = useStore((state) => state.toDisplayBrightness);
   return (
     <Card className="padded-card">
-      Colors: {JSON.stringify(displayColors, null, 2)}
-      Brightness: {JSON.stringify(displayBrightness, null, 2)}
+      <p>Colors: {JSON.stringify(displayColors, null, 2)}</p>
+      <p>Brightness: {JSON.stringify(displayBrightness, null, 2)}</p>
     </Card>
   );
 }
@@ -127,8 +128,15 @@ function App() {
       <AppNav />
       <SocketWrapper>
         <Container>
-          <Display />
-          <InputForm />
+          <Row>
+            <Col>
+              <AppCanvas />
+              <DebugDisplay />
+            </Col>
+            <Col>
+              <InputForm />
+            </Col>
+          </Row>
         </Container>
       </SocketWrapper>
     </div>
