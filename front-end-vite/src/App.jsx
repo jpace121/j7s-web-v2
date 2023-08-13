@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useStore } from "./Store.js";
-import { SocketWrapper } from "./SocketContext.tsx";
+import { sendDesiredState } from "./Api.js";
+import { SocketWrapper } from "./SocketContext.jsx";
 import {
   Navbar,
   Container,
@@ -101,7 +102,10 @@ function LightSelect(props) {
 
 function InputForm() {
   const [selectedLight, setSelectedLight] = useState(0);
-  const onSubmit = (e) => {};
+  const onSubmit = async (e) => {
+    await sendDesiredState();
+    e.stopPropagation();
+  };
   return (
     <Card className="padded-card">
       <LightSelect
@@ -111,7 +115,6 @@ function InputForm() {
       <ColorSelect selectedLight={selectedLight} />
       <BrightnessSelect selectedLight={selectedLight} />
       <Button variant="primary" onClick={onSubmit}>
-        {" "}
         Send
       </Button>
     </Card>

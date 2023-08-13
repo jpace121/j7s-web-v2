@@ -12,36 +12,49 @@ export function SocketWrapper(props) {
   const setUid = useStore((state) => state.setUid);
 
   useEffect(() => {
-    const onMessage = (data) => {
-      data = JSON.parse(data);
-      console.log(data);
-      if (data.hasOwnProperty("uid")) {
-        setUid(data["uid"]);
-      }
-      if (data.hasOwnProperty("data")) {
-        const newColors = data.data.data; // lol
+    const onMessage = (input) => {
+      input = JSON.parse(input);
+      console.log(input);
+
+      // TODO: Modify the API so we don't have to do a dance here to figure
+      // out message type.
+      // If I have a UID, I'm the ack response.
+      if (input.hasOwnProperty("uid")) {
+        setUid(input["uid"]);
+        const newColors = input.data.data; // lol
         for (let inc = 0; inc < newColors.length; inc++) {
           const brightness = newColors[inc].brightness;
           const color = newColors[inc].color;
           setToDisplayBrightness(inc, brightness);
           setToDisplayColor(inc, color);
-        }
-      }
+        } // end for
+      } // end if
+      else {
+        // I must be a normal state update.
+        const newColors = input.data;
+        for (let inc = 0; inc < newColors.length; inc++) {
+          const brightness = newColors[inc].brightness;
+          const color = newColors[inc].color;
+          setToDisplayBrightness(inc, brightness);
+          setToDisplayColor(inc, color);
+        } // end for
+      } //end else
     };
 
+    // TODO: Use window.location
     socket.current = new WebSocket("ws://localhost:9000/api/lights/ws");
 
     // Connection opened
-    socket.current.addEventListener("open", (event: any) => {
+    socket.current.addEventListener("open", (event) => {
       console.log("Connected to ws.");
     });
     // Connection closed.
-    socket.current.addEventListener("close", (event: any) => {
+    socket.current.addEventListener("close", (event) => {
       console.log("Disconnected from ws.");
     });
 
     // Messages!
-    socket.current.addEventListener("message", (event: any) => {
+    socket.current.addEventListener("message", (event) => {
       onMessage(event.data);
     });
 

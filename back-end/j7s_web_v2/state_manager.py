@@ -42,6 +42,5 @@ class StateManager():
 
     async def _update_subs_coroutine(self, light_states, sender):
         for (name, ws) in self._subs.items():
-            if name != sender:
-                print('Sending to {} from {}'.format(name, sender))
-                await ws.send_str(MessageToJson(light_states))
+            print('Sending to {} from {}'.format(name, sender))
+            await ws.send_str(MessageToJson(light_states))

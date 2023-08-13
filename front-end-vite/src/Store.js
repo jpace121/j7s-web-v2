@@ -1,10 +1,10 @@
 import { create } from "zustand";
 
 export const useStore = create((set, get) => ({
-  toDisplayColors: ["green", "green", "green", "green", "green"],
-  toDisplayBrightness: [0.0, 0.0, 0.0, 0.0, 0.0],
-  toSendColors: ["green", "green", "green", "green", "green"],
-  toSendBrightness: [0.0, 0.0, 0.0, 0.0, 0.0],
+  toDisplayColors: ["green", "green", "green", "green", "green", "green"],
+  toDisplayBrightness: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+  toSendColors: ["green", "green", "green", "green", "green", "green"],
+  toSendBrightness: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
   uid: null,
 
   setToDisplayColor: (index, color) => {
@@ -39,5 +39,3 @@ export const useStore = create((set, get) => ({
     set((state) => ({ uid: new_uid }));
   },
 }));
-
-export default useStore;
