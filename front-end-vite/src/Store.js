@@ -5,6 +5,7 @@ export const useStore = create((set, get) => ({
   toDisplayBrightness: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
   toSendColors: ["green", "green", "green", "green", "green", "green"],
   toSendBrightness: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+  toSendIndex: 0,
   uid: null,
 
   setToDisplayColor: (index, color) => {
@@ -37,5 +38,8 @@ export const useStore = create((set, get) => ({
   },
   setUid: (new_uid) => {
     set((state) => ({ uid: new_uid }));
+  },
+  setToSendIndex: (new_index) => {
+    set((state) => ({ toSendIndex: new_index }));
   },
 }));

@@ -14,6 +14,12 @@ message ChangeRequest {
    optional LightStateList data = 2;
 }
 
+message SingleChangeRequest {
+   optional string uid = 1;
+   optional int32 index = 2;
+   optional LightState data = 3;
+}
+
 message ConnectionAck {
    optional string uid = 1;
    optional LightStateList data = 2;

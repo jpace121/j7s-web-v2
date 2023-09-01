@@ -40,11 +40,12 @@ function DebugDisplay() {
 function BrightnessSelect(props) {
   const setToSendBrightness = useStore((state) => state.setToSendBrightness);
   const toSendBrightness = useStore((state) => state.toSendBrightness);
+  const toSendIndex = useStore((state) => state.toSendIndex);
 
   let onChange = (e) => {
-    setToSendBrightness(props.selectedLight, e.target.value);
+    setToSendBrightness(toSendIndex, e.target.value);
   };
-  const brightness = toSendBrightness[props.selectedLight];
+  const brightness = toSendBrightness[toSendIndex];
   return (
     <FloatingLabel label="Brightness">
       <Form.Control
@@ -63,11 +64,12 @@ function BrightnessSelect(props) {
 function ColorSelect(props) {
   const setToSendColor = useStore((state) => state.setToSendColor);
   const toSendColors = useStore((state) => state.toSendColors);
+  const toSendIndex = useStore((state) => state.toSendIndex);
 
   let onChange = (e) => {
-    setToSendColor(props.selectedLight, e.target.value);
+    setToSendColor(toSendIndex, e.target.value);
   };
-  const color = toSendColors[props.selectedLight];
+  const color = toSendColors[toSendIndex];
   return (
     <FloatingLabel label="Color">
       <Form.Select onChange={onChange} value={color}>
@@ -83,13 +85,15 @@ function ColorSelect(props) {
   );
 }
 
-function LightSelect(props) {
+function LightSelect() {
+  const setToSendIndex = useStore((state) => state.setToSendIndex);
+  const toSendIndex = useStore((state) => state.toSendIndex);
   let onChange = (e) => {
-    props.setSelectedLight(parseInt(e.target.value));
+    setToSendIndex(parseInt(e.target.value));
   };
   return (
     <FloatingLabel label="Light">
-      <Form.Select onChange={onChange} value={props.selectedLight}>
+      <Form.Select onChange={onChange} value={toSendIndex}>
         <option value="0">1</option>
         <option value="1">2</option>
         <option value="2">3</option>
@@ -102,19 +106,15 @@ function LightSelect(props) {
 }
 
 function InputForm() {
-  const [selectedLight, setSelectedLight] = useState(0);
   const onSubmit = async (e) => {
     await sendDesiredState();
     e.stopPropagation();
   };
   return (
     <Card className="padded-card">
-      <LightSelect
-        selectedLight={selectedLight}
-        setSelectedLight={setSelectedLight}
-      />
-      <ColorSelect selectedLight={selectedLight} />
-      <BrightnessSelect selectedLight={selectedLight} />
+      <LightSelect />
+      <ColorSelect />
+      <BrightnessSelect />
       <Button variant="primary" onClick={onSubmit}>
         Send
       </Button>

@@ -28,6 +28,14 @@ class StateManager():
         self._light_states = light_states
         self.update_subs(light_states, sender)
 
+    def update_single_state(self, index, new_state, sender):
+        # Copy the current state and make one change.
+        light_states = self.get_state()
+        light_states.data[index].color = new_state.color
+        light_states.data[index].brightness = new_state.brightness
+        # Now we can call the "normal" entrypoint.
+        self.update_state(light_states, sender)
+
     def add_sub(self, name, ws):
         print('Add sub')
         self._subs[name] = ws

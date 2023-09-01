@@ -2,7 +2,7 @@ from aiohttp import web
 import uuid
 import aiohttp
 import asyncio
-from j7s_api.LightState_pb2 import ChangeRequest, ConnectionAck
+from j7s_api.LightState_pb2 import ChangeRequest, ConnectionAck, SingleChangeRequest
 from google.protobuf.json_format import Parse, ParseError, MessageToJson
 import j7s_web_v2.state_manager as state_manager
 
@@ -26,6 +26,21 @@ async def post_lights(request):
         return web.Response(status=400, text='Bad request.')
     print('Updating state.')
     state_manager.update_state(change_request.data, change_request.uid)
+    return web.Response(text='Ok')
+
+@routes.post("/api/single_light")
+async def post_single_change(request):
+    print('Post Single Change')
+    change_request = None
+    try:
+        data = await request.text()
+        print("Got request: {}".format(data))
+        change_request = Parse(data, SingleChangeRequest())
+    except (ParseError) as error:
+        print(str(error))
+        return web.Response(status=400, text='Bad request.')
+    print('Updating state.')
+    state_manager.update_single_state(change_request.index, change_request.data, change_request.uid)
     return web.Response(text='Ok')
 
 @routes.get("/api/lights")
